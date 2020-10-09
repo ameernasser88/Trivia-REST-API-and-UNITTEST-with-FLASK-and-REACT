@@ -16,10 +16,18 @@ def create_app(test_config=None):
   '''
   @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
   '''
+  cors = CORS(app, resources={r"/api": {"origins": "*"}})
+
 
   '''
   @TODO: Use the after_request decorator to set Access-Control-Allow
   '''
+
+  @app.after_request
+  def after_request(response):
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,true')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
   '''
   @TODO: 
@@ -27,14 +35,20 @@ def create_app(test_config=None):
   for all available categories.
   '''
 
-  @app.route('/', methods=['GET'])
-  def get_books():
-    return jsonify(
-      {
-        "success": True
-        , "page" : "index"
-      }
-    )
+  @app.route('/api/categories', methods=['GET'])
+  def get_categories():
+    categories = Category.query.order_by(Category.id).all()
+    formatted_categories = [book.format() for book in categories]
+    if len(formatted_categories) == 0:
+      abort(404)
+    else:
+      return jsonify(
+        {
+          "success": True
+          ,"categories":formatted_categories
+          ,"total_categories":len(formatted_categories)
+        }
+      )
 
 
   '''
