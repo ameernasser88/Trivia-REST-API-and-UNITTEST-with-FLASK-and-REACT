@@ -1,7 +1,8 @@
 node_modules/
 .vscode
+.idea/
 __pycache__
-venv
+venv/
 
 # OS generated files #
 ######################
