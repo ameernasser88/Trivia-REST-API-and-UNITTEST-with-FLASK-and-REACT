@@ -27,6 +27,15 @@ def create_app(test_config=None):
   for all available categories.
   '''
 
+  @app.route('/', methods=['GET'])
+  def get_books():
+    return jsonify(
+      {
+        "success": True
+        , "page" : "index"
+      }
+    )
+
 
   '''
   @TODO: 
