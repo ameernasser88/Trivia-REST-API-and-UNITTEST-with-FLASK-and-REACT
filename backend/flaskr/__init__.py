@@ -252,31 +252,34 @@ def create_app(test_config=None):
   @app.route('/api/quiz', methods=['POST'])
   @cross_origin()
   def play_quiz():
-    body = request.get_json()
-    quiz_category = body.get('quiz_category', None)
-    previous_questions = body.get('previous_questions', [])
-    if quiz_category['type'] == 'click':
-      # 'quiz_category': {'type': 'click', 'id': 0}
+    try:
+      body = request.get_json()
+      quiz_category = body.get('quiz_category', None)
+      previous_questions = body.get('previous_questions', [])
+      if quiz_category['type'] == 'click':
+        # 'quiz_category': {'type': 'click', 'id': 0}
 
-      question_query = Question.query.filter(Question.id.notin_(previous_questions))
-      query_count = question_query.count()
-      irand = random.randrange(0, query_count)
-      question = question_query.all()[irand]
-    else:
-      # 'quiz_category': {'type': 'Science', 'id': '0'}
-      category_id = int(quiz_category['id'])+1
-      question_query = Question.query.filter(Question.category == category_id).filter(Question.id.notin_(previous_questions))
-      query_count = question_query.count()
-      irand = random.randrange(0, query_count)
-      question = question_query.all()[irand]
+        question_query = Question.query.filter(Question.id.notin_(previous_questions))
+        query_count = question_query.count()
+        irand = random.randrange(0, query_count)
+        question = question_query.all()[irand]
+      else:
+        # 'quiz_category': {'type': 'Science', 'id': '0'}
+        category_id = int(quiz_category['id'])+1
+        question_query = Question.query.filter(Question.category == category_id).filter(Question.id.notin_(previous_questions))
+        query_count = question_query.count()
+        irand = random.randrange(0, query_count)
+        question = question_query.all()[irand]
 
 
-    return jsonify(
-      {
-        "success": True
-        , "question": question.format()
-      }
-    )
+      return jsonify(
+        {
+          "success": True
+          , "question": question.format()
+        }
+      )
+    except:
+      abort(400)
 
 
   ''' 
