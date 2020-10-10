@@ -35,6 +35,26 @@ def create_app(test_config=None):
   for all available categories.
   '''
 
+  def paginate(request):
+    page = request.args.get("page", 1, type=int)
+    start = (page - 1) * QUESTIONS_PER_PAGE
+    end = start + QUESTIONS_PER_PAGE
+    return start, end
+
+  def get_categories_and_questions(search_pattern = None , category_id = None):
+    if search_pattern is None:
+      if category_id is None:
+        questions = Question.query.order_by(Question.id).all()
+      else:
+        questions = Question.query.filter(Question.category == category_id).order_by(Question.id).all()
+    else:
+      questions = Question.query.filter(Question.question.ilike(search_pattern)).all()
+
+    formatted_questions = [question.format() for question in questions]
+    categories = Category.query.order_by(Category.id).all()
+    formatted_categories = [category.type for category in categories]
+    return formatted_categories, formatted_questions
+
   @app.route('/api/categories', methods=['GET'])
   @cross_origin()
   def get_categories():
@@ -52,6 +72,8 @@ def create_app(test_config=None):
       )
 
 
+
+
   '''
   @TODO: 
   Create an endpoint to handle GET requests for questions, 
@@ -63,13 +85,8 @@ def create_app(test_config=None):
   @app.route('/api/questions', methods=['GET'])
   @cross_origin()
   def get_questions():
-    page = request.args.get("page", 1, type=int)
-    start = (page - 1) * QUESTIONS_PER_PAGE
-    end = start + QUESTIONS_PER_PAGE
-    questions = Question.query.order_by(Question.id).all()
-    formatted_questions = [question.format() for question in questions]
-    categories = Category.query.order_by(Category.id).all()
-    formatted_categories = [category.type for category in categories]
+    start,end = paginate(request)
+    formatted_categories, formatted_questions = get_categories_and_questions()
     if len(formatted_questions[start:end]) == 0:
       abort(404)
     else:
@@ -105,13 +122,8 @@ def create_app(test_config=None):
       abort(404)
     try:
       question.delete()
-      page = request.args.get("page", 1, type=int)
-      start = (page - 1) * QUESTIONS_PER_PAGE
-      end = start + QUESTIONS_PER_PAGE
-      questions = Question.query.order_by(Question.id).all()
-      formatted_questions = [question.format() for question in questions]
-      categories = Category.query.order_by(Category.id).all()
-      formatted_categories = [category.type for category in categories]
+      start,end = paginate(request)
+      formatted_categories, formatted_questions = get_categories_and_questions()
       if len(formatted_questions[start:end]) == 0:
         abort(404)
       else:
@@ -174,16 +186,11 @@ def create_app(test_config=None):
   @app.route('/api/questions/search', methods=['POST'])
   @cross_origin()
   def search_questions():
-    page = request.args.get("page", 1, type=int)
-    start = (page - 1) * QUESTIONS_PER_PAGE
-    end = start + QUESTIONS_PER_PAGE
     body = request.get_json()
     search_term = body.get('searchTerm', None)
     search_pattern = "%" + search_term + "%"
-    questions = Question.query.filter(Question.question.ilike(search_pattern)).all()
-    formatted_questions = [question.format() for question in questions]
-    categories = Category.query.order_by(Category.id).all()
-    formatted_categories = [category.type for category in categories]
+    formatted_categories, formatted_questions = get_categories_and_questions(search_pattern=search_pattern)
+    start,end = paginate(request)
     if len(formatted_questions[start:end]) == 0:
       abort(404)
     else:
@@ -212,13 +219,8 @@ def create_app(test_config=None):
   @app.route('/api/category/<category_id>/questions', methods=['GET'])
   @cross_origin()
   def get_questions_by_category(category_id):
-    page = request.args.get("page", 1, type=int)
-    start = (page - 1) * QUESTIONS_PER_PAGE
-    end = start + QUESTIONS_PER_PAGE
-    questions = Question.query.filter(Question.category==category_id).order_by(Question.id).all()
-    formatted_questions = [question.format() for question in questions]
-    categories = Category.query.order_by(Category.id).all()
-    formatted_categories = [category.type for category in categories]
+    start,end = paginate(request)
+    formatted_categories, formatted_questions = get_categories_and_questions(category_id=category_id)
     if len(formatted_questions[start:end]) == 0:
       abort(404)
     else:
@@ -252,34 +254,33 @@ def create_app(test_config=None):
   @app.route('/api/quiz', methods=['POST'])
   @cross_origin()
   def play_quiz():
-    try:
-      body = request.get_json()
-      quiz_category = body.get('quiz_category', None)
-      previous_questions = body.get('previous_questions', [])
-      if quiz_category['type'] == 'click':
-        # 'quiz_category': {'type': 'click', 'id': 0}
 
-        question_query = Question.query.filter(Question.id.notin_(previous_questions))
-        query_count = question_query.count()
-        irand = random.randrange(0, query_count)
-        question = question_query.all()[irand]
-      else:
-        # 'quiz_category': {'type': 'Science', 'id': '0'}
-        category_id = int(quiz_category['id'])+1
-        question_query = Question.query.filter(Question.category == category_id).filter(Question.id.notin_(previous_questions))
-        query_count = question_query.count()
-        irand = random.randrange(0, query_count)
-        question = question_query.all()[irand]
+    body = request.get_json()
+    quiz_category = body.get('quiz_category', None)
+    previous_questions = body.get('previous_questions', [])
+    if quiz_category['type'] == 'click':
+      # 'quiz_category': {'type': 'click', 'id': 0}
+
+      question_query = Question.query.filter(Question.id.notin_(previous_questions))
+      query_count = question_query.count()
+      irand = random.randrange(0, query_count)
+      question = question_query.all()[irand]
+    else:
+      # 'quiz_category': {'type': 'Science', 'id': '0'}
+      category_id = int(quiz_category['id'])+1
+      question_query = Question.query.filter(Question.category == category_id).filter(Question.id.notin_(previous_questions))
+      query_count = question_query.count()
+      irand = random.randrange(0, query_count)
+      question = question_query.all()[irand]
 
 
-      return jsonify(
-        {
-          "success": True
-          , "question": question.format()
-        }
-      )
-    except:
-      abort(400)
+    return jsonify(
+      {
+        "success": True
+        , "question": question.format()
+      }
+    )
+
 
 
   ''' 
