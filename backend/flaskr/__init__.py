@@ -263,15 +263,24 @@ def create_app(test_config=None):
 
       question_query = Question.query.filter(Question.id.notin_(previous_questions))
       query_count = question_query.count()
-      irand = random.randrange(0, query_count)
-      question = question_query.all()[irand]
+      irand = random.randint(0, int(query_count)-1)
+      if int(query_count)==1:
+        question = question_query.all()[0]
+      else:
+        question = question_query.all()[irand]
     else:
       # 'quiz_category': {'type': 'Science', 'id': '0'}
       category_id = int(quiz_category['id'])+1
       question_query = Question.query.filter(Question.category == category_id).filter(Question.id.notin_(previous_questions))
       query_count = question_query.count()
-      irand = random.randrange(0, query_count)
-      question = question_query.all()[irand]
+      irand = random.randint(0, int(query_count)-1)
+      if int(query_count)==1:
+        question = question_query.all()[0]
+      else:
+        question = question_query.all()[irand]
+
+      print("count" + str(query_count))
+      print('rand' + str(irand))
 
 
     return jsonify(
