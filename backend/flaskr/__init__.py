@@ -1,7 +1,7 @@
 import os
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS
+from flask_cors import CORS , cross_origin
 import random
 
 from models import setup_db, Question, Category
@@ -16,7 +16,7 @@ def create_app(test_config=None):
   '''
   @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
   '''
-  cors = CORS(app, resources={r"/api": {"origins": "*"}})
+  CORS(app, resources={r"/*": {"origins": "*"}})
 
 
   '''
@@ -36,9 +36,10 @@ def create_app(test_config=None):
   '''
 
   @app.route('/api/categories', methods=['GET'])
+  @cross_origin()
   def get_categories():
     categories = Category.query.order_by(Category.id).all()
-    formatted_categories = [book.format() for book in categories]
+    formatted_categories = [category.type for category in categories]
     if len(formatted_categories) == 0:
       abort(404)
     else:
@@ -57,7 +58,33 @@ def create_app(test_config=None):
   including pagination (every 10 questions). 
   This endpoint should return a list of questions, 
   number of total questions, current category, categories. 
+  '''
 
+  @app.route('/api/questions', methods=['GET'])
+  @cross_origin()
+  def get_questions():
+    page = request.args.get("page", 1, type=int)
+    start = (page - 1) * QUESTIONS_PER_PAGE
+    end = start + QUESTIONS_PER_PAGE
+    questions = Question.query.order_by(Question.id).all()
+    formatted_questions = [question.format() for question in questions]
+    categories = Category.query.order_by(Category.id).all()
+    formatted_categories = [category.type for category in categories]
+    if len(formatted_questions) == 0:
+      abort(404)
+    else:
+      return jsonify(
+        {
+          "success": True
+          , "questions": formatted_questions[start:end]
+          , "total_questions": len(formatted_questions)
+          , "categories": formatted_categories
+          , "current_category": None
+        }
+      )
+
+
+  '''
   TEST: At this point, when you start the application
   you should see questions and categories generated,
   ten questions per page and pagination at the bottom of the screen for three pages.
@@ -77,7 +104,27 @@ def create_app(test_config=None):
   Create an endpoint to POST a new question, 
   which will require the question and answer text, 
   category, and difficulty score.
+  '''
 
+  @app.route('/api/questions', methods=['POST'])
+  @cross_origin()
+  def create_question():
+    body = request.get_json()
+    new_question = body.get('question', None)
+    new_answer = body.get('answer', None)
+    new_difficulty = body.get('difficulty', None)
+    new_category = body.get('category', None)
+    try:
+      question_item = Question(question=new_question,answer=new_answer,category=new_category,difficulty=new_difficulty)
+      question_item.insert()
+      return jsonify({
+        "success": True
+        , "created": question_item.id
+      })
+
+    except:
+      abort(422)
+  '''
   TEST: When you submit a question on the "Add" tab, 
   the form will clear and the question will appear at the end of the last page
   of the questions list in the "List" tab.  
@@ -121,7 +168,23 @@ def create_app(test_config=None):
   Create error handlers for all expected errors 
   including 404 and 422. 
   '''
-  
+
+  @app.errorhandler(404)
+  def not_found(error):
+    return jsonify({
+      "success": False,
+      "error": 404,
+      "message": "Not found"
+    }), 404
+
+  @app.errorhandler(422)
+  def unprocessable_entity(error):
+    return jsonify({
+      "success": False,
+      "error": 404,
+      "message": "Unprocessable Entity"
+    }), 422
+
   return app
 
     
