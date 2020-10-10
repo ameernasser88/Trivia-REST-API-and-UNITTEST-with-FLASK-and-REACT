@@ -144,11 +144,39 @@ def create_app(test_config=None):
   '''
   @TODO: 
   Create a GET endpoint to get questions based on category. 
+  '''
 
+  @app.route('/api/category/<category_id>/questions', methods=['GET'])
+  @cross_origin()
+  def get_questions_by_category(category_id):
+    page = request.args.get("page", 1, type=int)
+    start = (page - 1) * QUESTIONS_PER_PAGE
+    end = start + QUESTIONS_PER_PAGE
+    questions = Question.query.filter(Question.category==category_id).order_by(Question.id).all()
+    formatted_questions = [question.format() for question in questions]
+    categories = Category.query.order_by(Category.id).all()
+    formatted_categories = [category.type for category in categories]
+    if len(formatted_questions) == 0:
+      abort(404)
+    else:
+      return jsonify(
+        {
+          "success": True
+          , "questions": formatted_questions[start:end]
+          , "total_questions": len(formatted_questions)
+          , "categories": formatted_categories
+          , "current_category": Category.query.get(category_id).type
+        }
+      )
+
+
+
+  '''
   TEST: In the "List" tab / main screen, clicking on one of the 
   categories in the left column will cause only questions of that 
   category to be shown. 
   '''
+
 
 
   '''
