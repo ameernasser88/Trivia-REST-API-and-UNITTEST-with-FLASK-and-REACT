@@ -247,8 +247,39 @@ def create_app(test_config=None):
   Create a POST endpoint to get questions to play the quiz. 
   This endpoint should take category and previous question parameters 
   and return a random questions within the given category, 
-  if provided, and that is not one of the previous questions. 
+  if provided, and that is not one of the previous questions.
+  '''
+  @app.route('/api/quiz', methods=['POST'])
+  @cross_origin()
+  def play_quiz():
+    body = request.get_json()
+    quiz_category = body.get('quiz_category', None)
+    previous_questions = body.get('previous_questions', [])
+    if quiz_category['type'] == 'click':
+      # 'quiz_category': {'type': 'click', 'id': 0}
 
+      question_query = Question.query.filter(Question.id.notin_(previous_questions))
+      query_count = question_query.count()
+      irand = random.randrange(0, query_count)
+      question = question_query.all()[irand]
+    else:
+      # 'quiz_category': {'type': 'Science', 'id': '0'}
+      category_id = int(quiz_category['id'])+1
+      question_query = Question.query.filter(Question.category == category_id).filter(Question.id.notin_(previous_questions))
+      query_count = question_query.count()
+      irand = random.randrange(0, query_count)
+      question = question_query.all()[irand]
+
+
+    return jsonify(
+      {
+        "success": True
+        , "question": question.format()
+      }
+    )
+
+
+  ''' 
   TEST: In the "Play" tab, after a user selects "All" or a category,
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
