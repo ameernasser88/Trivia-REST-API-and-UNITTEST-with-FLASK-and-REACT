@@ -70,7 +70,7 @@ def create_app(test_config=None):
     formatted_questions = [question.format() for question in questions]
     categories = Category.query.order_by(Category.id).all()
     formatted_categories = [category.type for category in categories]
-    if len(formatted_questions) == 0:
+    if len(formatted_questions[start:end]) == 0:
       abort(404)
     else:
       return jsonify(
@@ -112,7 +112,7 @@ def create_app(test_config=None):
       formatted_questions = [question.format() for question in questions]
       categories = Category.query.order_by(Category.id).all()
       formatted_categories = [category.type for category in categories]
-      if len(formatted_questions) == 0:
+      if len(formatted_questions[start:end]) == 0:
         abort(404)
       else:
         return jsonify(
@@ -184,7 +184,7 @@ def create_app(test_config=None):
     formatted_questions = [question.format() for question in questions]
     categories = Category.query.order_by(Category.id).all()
     formatted_categories = [category.type for category in categories]
-    if len(formatted_questions) == 0:
+    if len(formatted_questions[start:end]) == 0:
       abort(404)
     else:
       return jsonify(
@@ -219,7 +219,7 @@ def create_app(test_config=None):
     formatted_questions = [question.format() for question in questions]
     categories = Category.query.order_by(Category.id).all()
     formatted_categories = [category.type for category in categories]
-    if len(formatted_questions) == 0:
+    if len(formatted_questions[start:end]) == 0:
       abort(404)
     else:
       return jsonify(
