@@ -94,7 +94,41 @@ def create_app(test_config=None):
   '''
   @TODO: 
   Create an endpoint to DELETE question using a question ID. 
+  '''
 
+  @app.route('/api/questions/<question_id>', methods=['DELETE'])
+  @cross_origin()
+  def delete_question(question_id):
+    question = Question.query.get(question_id)
+    print(question.question)
+    if question is None:
+      abort(404)
+    try:
+      question.delete()
+      page = request.args.get("page", 1, type=int)
+      start = (page - 1) * QUESTIONS_PER_PAGE
+      end = start + QUESTIONS_PER_PAGE
+      questions = Question.query.order_by(Question.id).all()
+      formatted_questions = [question.format() for question in questions]
+      categories = Category.query.order_by(Category.id).all()
+      formatted_categories = [category.type for category in categories]
+      if len(formatted_questions) == 0:
+        abort(404)
+      else:
+        return jsonify(
+          {
+            "success": True
+            ,"deleted":question_id
+            , "questions": formatted_questions[start:end]
+            , "total_questions": len(formatted_questions)
+            , "categories": formatted_categories
+            , "current_category": None
+          }
+        )
+    except:
+      abort(400)
+
+  '''
   TEST: When you click the trash icon next to a question, the question will be removed.
   This removal will persist in the database and when you refresh the page. 
   '''
@@ -238,9 +272,17 @@ def create_app(test_config=None):
   def unprocessable_entity(error):
     return jsonify({
       "success": False,
-      "error": 404,
+      "error": 422,
       "message": "Unprocessable Entity"
     }), 422
+
+  @app.errorhandler(400)
+  def bad_request(error):
+    return jsonify({
+      "success": False,
+      "error": 400,
+      "message": "Bad Request"
+    }), 400
 
   return app
 
