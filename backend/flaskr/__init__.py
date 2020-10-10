@@ -135,7 +135,36 @@ def create_app(test_config=None):
   Create a POST endpoint to get questions based on a search term. 
   It should return any questions for whom the search term 
   is a substring of the question. 
+  '''
 
+  @app.route('/api/questions/search', methods=['POST'])
+  @cross_origin()
+  def search_questions():
+    page = request.args.get("page", 1, type=int)
+    start = (page - 1) * QUESTIONS_PER_PAGE
+    end = start + QUESTIONS_PER_PAGE
+    body = request.get_json()
+    search_term = body.get('searchTerm', None)
+    search_pattern = "%" + search_term + "%"
+    questions = Question.query.filter(Question.question.ilike(search_pattern)).all()
+    formatted_questions = [question.format() for question in questions]
+    categories = Category.query.order_by(Category.id).all()
+    formatted_categories = [category.type for category in categories]
+    if len(formatted_questions) == 0:
+      abort(404)
+    else:
+      return jsonify(
+        {
+          "success": True
+          , "questions": formatted_questions[start:end]
+          , "total_questions": len(formatted_questions)
+          , "categories": formatted_categories
+          , "current_category": None
+        }
+      )
+
+
+  '''
   TEST: Search by any phrase. The questions list will update to include 
   only question that include that string within their question. 
   Try using the word "title" to start. 
