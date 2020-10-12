@@ -149,7 +149,7 @@ def create_app(test_config=None):
                 }
             )
     # endpoint to get questions of a specific category
-    @app.route('/api/category/<category_id>/questions', methods=['GET'])
+    @app.route('/api/categories/<category_id>/questions', methods=['GET'])
     @cross_origin()
     def get_questions_by_category(category_id):
         start, end = paginate(request)

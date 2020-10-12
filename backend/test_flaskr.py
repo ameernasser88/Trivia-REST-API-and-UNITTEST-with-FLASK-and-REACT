@@ -79,26 +79,26 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['success'], False)
 
     def test_questions_by_category(self):
-        res = self.client().get('api/category/1/questions')
+        res = self.client().get('api/categories/5/questions')
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-        self.assertEqual(data['current_category'], "Science")
+        self.assertEqual(data['current_category'], "Entertainment")
 
     def test_404_questions_by_category(self):
-        res = self.client().get('api/category/10/questions')
+        res = self.client().get('api/categories/10/questions')
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data['success'], False)
 
     def test_play_quiz(self):
-        res = self.client().post('/api/quiz',json={"previous_questions":[],"quiz_category":{"id":0,"type":"Science"}})
+        res = self.client().post('api/quiz',json={"previous_questions":[],"quiz_category":{"id":4,"type":"Entertainment"}})
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
 
     def test_400_play_quiz(self):
-        res = self.client().post('/api/quiz',json={"previous_questions":[],"quiz_category":{"id":10,"type":"Science"}})
+        res = self.client().post('api/quiz',json={"previous_questions":[],"quiz_category":{"id":10,"type":"Science"}})
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 400)
         self.assertEqual(data['success'], False)
