@@ -1,6 +1,6 @@
 # Full Stack API 
 
-This application is the final project for course 2 in udacity's advanced web development nanodegree program , the project goal is to give the ability to structure plan, implement, and test an API - skills essential for enabling your future applications to communicate with others. 
+This application is the final project for course 2 ( API development , testing and documentation ) in udacity's advanced web development nanodegree program , the project goal is to give the ability to structure plan, implement, and test an API - skills essential for enabling your future applications to communicate with others. 
 
 Specifications :
 1) Display questions - both all questions and by category. Questions should show the question, category and difficulty rating by default and can show/hide the answer. 
