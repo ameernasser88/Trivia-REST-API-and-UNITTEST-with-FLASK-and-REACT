@@ -13,5 +13,3 @@ Completing this trivia app will give you the ability to structure plan, implemen
 1. [`./frontend/`](./frontend/README.md)
 2. [`./backend/`](./backend/README.md)
  
-
-[View the README.md within ./frontend for more details.](./frontend/README.md)
